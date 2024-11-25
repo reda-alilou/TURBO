@@ -61,7 +61,7 @@ Pour utiliser ce bot dans un autre serveur Discord, vous devez remplacer les nom
 
 1. **Clonez ce dépôt :**
    ```bash
-   git clone https://github.com/votre-repo/turbo-bot.git
+   git clone https://github.com/reda-alilou/TURBO.git
    cd turbo-bot
    ```
 
