@@ -11,12 +11,12 @@ import html
 
 # Load the environment variables from the .env file
 load_dotenv()
-TOKEN = os.getenv("TURBO_TOKEN")
+TOKEN = os.getenv("TURBO_TOKEN") # Load environment variables for secure access to sensitive data such as API keys and tokens.
 
 # Load levels data
 def load_levels_data():
     try:
-        with open("levels.json", "r") as file:
+        with open("levels.json", "r") as file: # Load levels.json to track user activity data for the leveling system.
             return json.load(file)
     except FileNotFoundError:
         return {}
@@ -40,7 +40,7 @@ intents.members = True  # Required for member events (join, leave, update)
 intents.guilds = True  # Required for guild-level events (bans, unbans, etc.)
 
 # Create the bot with the intents
-bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
+bot = commands.Bot(command_prefix="!", intents=intents, help_command=None) # # Initialize the bot with the "!" prefix for commands. Custom help command will be implemented later, so set to None.
 
 # Forbidden words list
 FORBIDDEN_WORDS = {"7mar", "kelb", "bghel"}  # Add your forbidden words here
@@ -49,24 +49,24 @@ FORBIDDEN_WORDS = {"7mar", "kelb", "bghel"}  # Add your forbidden words here
 ALLOWED_DOMAINS = {"youtube.com", "discord.com"}  # Add domains you want to allow
 
 @bot.event
-async def on_ready():
-    print(f"Logged in as {bot.user.name} - {bot.user.id}")
+async def on_ready(): # Triggered when the bot is connected and ready to interact with Discord servers.
+    print(f"Logged in as {bot.user.name} - {bot.user.id}") 
     print("Ready to go!")
 
 @bot.event
-async def on_member_join(member):
-    # Send a personalized welcome message in the "welcome" channel
+async def on_member_join(member): # Triggered when a new member joins the server.
+    # Sends a welcome message in the "👋welcome" channel and assigns the default "Member" role.
     channel = discord.utils.get(member.guild.text_channels, name="👋welcome")
     if channel:
         await channel.send(f"Welcome to the server, {member.mention}! We're glad to have you here. 🎉")
     
     # Assign the "Member" role to the new user
-    role = discord.utils.get(member.guild.roles, name="Member")  # Replace "Member" with the exact role name
+    role = discord.utils.get(member.guild.roles, name="Member")  # Find the role by name
     if role:
         await member.add_roles(role)
-        print(f"Assigned {role.name} role to {member.name}")
+        print(f"Assigned {role.name} role to {member.name}") # Log the assignment of the role.
     else:
-        print("Role not found!")
+        print("Role not found!") # Log if the role is not found.    
 
 # event to check messages for forbidden words and links and manage quiz answers and leveling system
 @bot.event
@@ -81,9 +81,9 @@ async def on_message(message):
         return
 
     # Check for forbidden words
-    if any(word in message.content.lower() for word in FORBIDDEN_WORDS):
+    if any(word in message.content.lower() for word in FORBIDDEN_WORDS): 
         await message.delete()
-        log_channel = discord.utils.get(message.guild.text_channels, name="📬logs")
+        log_channel = discord.utils.get(message.guild.text_channels, name="📬logs") 
         if log_channel:
             await log_channel.send(
                 f"🚨 A message from {message.author.mention} was deleted for containing forbidden words."
@@ -93,8 +93,8 @@ async def on_message(message):
     # Check for unauthorized links
     if "http" in message.content.lower():  # Rough check for links
         if not any(domain in message.content.lower() for domain in ALLOWED_DOMAINS):
-            await message.delete()
-            log_channel = discord.utils.get(message.guild.text_channels, name="📬logs")
+            await message.delete() # Delete the message if it contains unauthorized links
+            log_channel = discord.utils.get(message.guild.text_channels, name="📬logs") 
             if log_channel:
                 await log_channel.send(
                     f"🚨 A message from {message.author.mention} was deleted for containing unauthorized links."
@@ -114,10 +114,10 @@ async def on_message(message):
     current_level = user_data[user_id]["level"]
 
     # Check for level-up
-    new_level = calculate_level(current_points)
-    if new_level > current_level:
-        user_data[user_id]["level"] = new_level
-        await notify_level_up(message.author, new_level, message.guild)
+    new_level = calculate_level(current_points) # Calculate the new level based on the points
+    if new_level > current_level: # Check if the user has leveled up
+        user_data[user_id]["level"] = new_level # Update the user's level
+        await notify_level_up(message.author, new_level, message.guild) # Notify the user about the level-up
 
     # Save updated data
     save_levels_data()
@@ -139,35 +139,35 @@ async def on_message(message):
                 # Notify the user and send the next question
                 await message.channel.send(f"✅ **Correct!** Well done, {message.author.mention}. 🎉 You earned 1 point!")
                 current_question = None
-                await send_next_question(message.channel)
+                await send_next_question(message.channel) # Send the next question
             elif user_answer.isdigit():
                 # Handle numerical input for multiple-choice questions
-                option_index = int(user_answer) - 1
-                if 0 <= option_index < len(current_question["options"]):
-                    selected_option = current_question["options"][option_index]
-                    if selected_option == current_question["answer"]:
+                option_index = int(user_answer) - 1 # Convert the user's answer to an integer
+                if 0 <= option_index < len(current_question["options"]): # Check if the option is valid
+                    selected_option = current_question["options"][option_index] # Get the selected option
+                    if selected_option == current_question["answer"]: # Check if the selected option is correct
                         # Update the user's score
-                        if user_id not in quiz_scores:
-                            quiz_scores[user_id] = 0
-                        quiz_scores[user_id] += 1
+                        if user_id not in quiz_scores: # Check if the user is in the quiz scores
+                            quiz_scores[user_id] = 0 # Initialize the user's score
+                        quiz_scores[user_id] += 1 # Increment the user's score
 
                         # Notify the user and send the next question
                         await message.channel.send(f"✅ **Correct!** Well done, {message.author.mention}. 🎉 You earned 1 point!")
                         current_question = None
                         await send_next_question(message.channel)
                     else:
-                        await message.channel.send(f"❌ Wrong answer, {message.author.mention}. Try again!")
+                        await message.channel.send(f"❌ Wrong answer, {message.author.mention}. Try again!") # Notify the user about the incorrect answer
                 else:
-                    await message.channel.send(f"⚠️ Invalid option, {message.author.mention}. Please choose a valid number.")
+                    await message.channel.send(f"⚠️ Invalid option, {message.author.mention}. Please choose a valid number.") # Notify the user about the invalid option
             else:
                 # Notify incorrect answers
                 await message.channel.send(f"❌ Wrong answer, {message.author.mention}. Try again!")
 
     # Allow other commands to be processed
-    await bot.process_commands(message)
+    await bot.process_commands(message) 
 
 async def notify_level_up(user, new_level, guild):
-    """Notify user about level-up in DM and level-up channel."""
+    # Notifies the user in both the level-up channel and DMs. If DMs are disabled, logs an error message.
     level_up_message = f"🎉 {user.mention}, you have leveled up to **Level {new_level}!** 🌟"
 
     # Notify in the dedicated level-up channel
@@ -213,7 +213,8 @@ async def on_message_edit(before, after):
 # Event to assign roles based on reactions
 @bot.event
 async def on_raw_reaction_add(payload):
-    """Assign role when a reaction is added."""
+    """ Triggered when a user reacts to a message.
+        Assigns roles to users based on the emoji used. Uses the `reaction_roles` mapping. """
     if payload.member.bot:
         return  # Ignore bot reactions
 
@@ -327,7 +328,9 @@ async def on_command_error(ctx, error):
 @bot.command()
 @commands.has_permissions(ban_members=True)
 async def ban(ctx, member: discord.Member, *, reason=None):
-    """Bans a member"""
+    """ Bans a member from the server. Requires the 'ban_members' permission.
+    - `ctx`: The context of the command, including the invoking user and channel.
+    - `reason`: Optional reason for the ban, logged for moderation purposes.v"""
     await member.ban(reason=reason)
     await ctx.send(f"{member.mention} has been banned. 🚫")
 
@@ -441,7 +444,7 @@ async def action(ctx, *, action_type=None):
 @bot.command()
 @commands.has_permissions(manage_messages=True)
 async def clear(ctx, amount: int):
-    """Clears a specified number of messages."""
+    # Deletes the specified number of messages plus the command message itself.
     await ctx.channel.purge(limit=amount + 1)
     await ctx.send(f"Cleared {amount} messages. 🧹", delete_after=5)
 
@@ -679,12 +682,7 @@ current_question = None
 @bot.command()
 @commands.has_permissions(manage_guild=True)
 async def start_quiz(ctx, category: int = None, difficulty: str = None):
-    """
-    Starts a quiz by fetching questions from an API.
-    Parameters:
-    - category: (Optional) Category ID for the quiz.
-    - difficulty: (Optional) Difficulty level ('easy', 'medium', 'hard').
-    """
+    # Fetches questions from the Open Trivia Database API. If no category or difficulty is provided, defaults are used.
     global quiz_active, quiz_scores, quiz_questions, current_question
 
     # Ensure the command is run in the designated quiz channel
@@ -739,9 +737,7 @@ async def start_quiz(ctx, category: int = None, difficulty: str = None):
     await send_next_question(ctx)
 
 async def send_next_question(ctx):
-    """
-    Sends the next question in the quiz.
-    """
+    # Sends the next question in the quiz. If no questions remain, announces the end of the quiz.
     global quiz_questions, current_question
 
     if not quiz_questions:
